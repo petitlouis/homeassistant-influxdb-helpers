@@ -38,6 +38,35 @@ if [ -f "${LOAD_HELPERS}" ]; then
     . "${LOAD_HELPERS}" "${HOME}/sandbox/ha.influxdb.credentials.sh"
 fi
 ```
+### 🏠 Installation on Home Assistant OS
+
+If you want to use these helpers directly within your Home Assistant terminal (via the **Advanced SSH & Web Terminal** add-on), follow these steps:
+
+#### Clone the repository
+We recommend cloning the repo into the `/share` folder to ensure it persists across add-on restarts:
+
+```bash
+cd /share
+git clone https://github.com/petitlouis/homeassistant-influxdb-helpers
+```
+
+#### Create your credentials file
+
+Follow [Credentials Configuration](#credentials-configuration) and store your HomeAssistant and InfluxDB credentials `ha.influxdb.credentials.sh` in the `/config` folder (which is included in your HA backups)
+
+
+#### Auto-load on terminal start
+
+To have the commands available every time you open the terminal, add the loader to your shell profile (`.zshrc` for Advanced SSH or .bashrc for the standard add-on):
+
+```shell
+REPO_PATH="/share/homeassistant-influxdb-helpers"
+CREDS_PATH="/config/ha.influxdb.credentials.sh"
+
+if [ -f "${REPO_PATH}/load.ha.influxdb.sh" ]; then
+    . "${REPO_PATH}/load.ha.influxdb.sh" "${CREDS_PATH}"
+fi
+```
 
 ---
 
