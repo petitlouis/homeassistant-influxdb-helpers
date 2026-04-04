@@ -1,0 +1,98 @@
+api_version: 1
+host: XXXX-influxdb
+port: 8086
+database: home_assistant
+username: !secret influxdb_user
+password: !secret influxdb_password
+max_retries: 3
+include:
+  entities:
+   
+    # ha_getsensors | egrep -e 'sensor\.enedis_' | sed 's/^/    - /'
+    # consommation journalière
+    - sensor.enedis_conso_hc_hier
+    - sensor.enedis_conso_hp_hier
+    
+    # cout la veille HP / HC de la veille
+    - sensor.enedis_cout_hc_hier
+    - sensor.enedis_cout_hp_hier
+
+    # --- ÉNERGIE (Conso) ---
+    # uniquement les sensors matériels
+    # ha_getsensors | egrep -e 'energy' | egrep -v 'myenedis|livebox_fibre|thermostat' | sed 's/^/    - /'
+    - sensor.p2_energy
+    - sensor.tv_energy
+    - sensor.home_cinema_energy
+    - sensor.chromcast_energy
+    - sensor.radiateur_p3_energy
+    - sensor.radiateur_chbre_p2_energy
+
+    # --- BATTERIES ---
+    # ha_getsensors | egrep 'battery$' | grep -v 'battery_state' | sed 's/^/    - /'
+    - sensor.pixel_6_battery_level_optim
+    - sensor.galaxy_watch5_gyfk_battery_level
+    - sensor.pixel_6_battery_level
+    - sensor.tdegp3_battery
+    - sensor.tdegext_sud_est_battery
+    - sensor.tdegp4_battery
+    - sensor.tdegchbre_p1_battery
+    - sensor.tdegchbre_p2_battery
+    - sensor.tdegext_nord_est_battery
+    - sensor.detecteur_ouverture_fenetre_p1_battery
+    - sensor.detecteur_ouverture_fenetre_p3_battery
+    - sensor.detecteur_ouverture_fenetre_p4_battery
+    - sensor.detecteur_ouverture_fenetre_p2_battery
+
+    # --- TEMPÉRATURES ---
+    # ha_getsensors | egrep -e 'sensor.tdeg' | egrep -e 'temperature$' | sed 's/^/    - /'
+    - sensor.tdegp3_temperature
+    - sensor.tdegext_sud_est_temperature
+    - sensor.tdegp4_temperature
+    - sensor.tdegchbre_p1_temperature
+    - sensor.tdegchbre_p2_temperature
+    - sensor.tdegext_nord_est_temperature
+
+    # --- HUMIDITE ---
+    # ha_getsensors | egrep -e 'sensor.tdeg' | egrep -e 'humidity$' | sed 's/^/    - /'
+    - sensor.tdegp3_humidity
+    - sensor.tdegext_sud_est_humidity
+    - sensor.tdegp4_humidity
+    - sensor.tdegchbre_p1_humidity
+    - sensor.tdegchbre_p2_humidity
+    - sensor.tdegext_nord_est_humidity
+
+    # --- TEMPERATURES ET HUMIDITE EXTERNES ---
+    - sensor.tdegp4_pressure # T° Ext Pression Atmosphérique [992.6]
+
+    # DETECTEUR OUVERTURE
+    # ha_getsensors | egrep -e '_contact' | egrep -e 'contact$' | sed 's/^/    - /' 
+    - binary_sensor.detecteur_ouverture_fenetre_p1_contact
+    - binary_sensor.detecteur_ouverture_fenetre_p3_contact
+    - binary_sensor.detecteur_ouverture_fenetre_p4_contact
+    - binary_sensor.detecteur_ouverture_fenetre_p2_contact
+
+    # Versatile Thermostats
+    # ha_getclimats | sed 's/^/    - /' 
+    # - climate.thermostat_p3 (attribut temperature) : Pour enregistrer ta consigne cible et vérifier si elle est respectée.
+    # - climate.thermostat_p3
+    # - climate.thermostat_chambre_p2
+
+    # ha_getsensors | grep thermostat_ | egrep -e '_power_percent$|_energy$|_temperature_slope$|_ema_temperature$|_consigne$|_temp_ext$' | sed 's/^/    - /' | sort
+    # - power_percent : C'est la donnée vitale. Elle te permet de voir comment l'algorithme TPI module la puissance au fil de la journée.
+    # - energy : Indispensable pour tes statistiques de coût à long terme (semaine/mois/an).
+    # - temperature_slope : Très utile dans InfluxDB pour voir si ton radiateur "anticipe" bien. Si la pente est trop raide, tu sauras qu'il faut baisser ton coefficient coeff_int.
+    # - _ema_temperature : Garder cette moyenne lissée plutôt que la température brute de ta sonde permet d'avoir des courbes beaucoup plus lisibles dans Grafana/InfluxDB. 
+    # - _consigne: T° consigne donné au thermostat
+    # - _temp_ext: T° exterieur donnée à virtual thermostat
+    - sensor.thermostat_chambre_p2_consigne
+    - sensor.thermostat_chambre_p2_ema_temperature
+    - sensor.thermostat_chambre_p2_energy
+    - sensor.thermostat_chambre_p2_power_percent
+    - sensor.thermostat_chambre_p2_temperature_slope
+    - sensor.thermostat_chambre_p2_temp_ext
+    - sensor.thermostat_p3_consigne
+    - sensor.thermostat_p3_ema_temperature
+    - sensor.thermostat_p3_energy
+    - sensor.thermostat_p3_power_percent
+    - sensor.thermostat_p3_temperature_slope
+    - sensor.thermostat_p3_temp_ext

@@ -1,0 +1,10 @@
+# .gitignore
+credentials.sh
+*.csv
+*.txt
+bin/
+*.tar.gz
+ha.influxdb.credentials.sh
+.DS_Store
+.vscode/
+EOF
