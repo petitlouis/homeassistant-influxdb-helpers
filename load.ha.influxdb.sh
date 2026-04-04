@@ -1,7 +1,18 @@
 #!/bin/bash
 
 # Path Configuration
-sandbox_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+# Cette fonction détecte le chemin absolu du script, qu'il soit exécuté ou sourcé
+get_script_dir() {
+    local SOURCE="${BASH_SOURCE[0]:-${(%):-%x}}"
+    while [ -h "$SOURCE" ]; do
+        local DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+        SOURCE="$(readlink "$SOURCE")"
+        [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+    done
+    echo "$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+}
+
+export sandbox_dir=$(get_script_dir)
 credentials="$1"
 
 scripts_dir="${sandbox_dir}/scripts"
