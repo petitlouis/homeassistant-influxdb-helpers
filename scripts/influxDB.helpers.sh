@@ -9,13 +9,23 @@ if ! command -v "$cmd" >/dev/null 2>&1 && [ ! -f "$LOCAL_BIN_DIR/$cmd" ]; then
     mkdir -p "$LOCAL_BIN_DIR"
     (
         cd "$LOCAL_BIN_DIR" || return 1
-        wget -q https://dl.influxdata.com/influxdb/releases/influxdb-1.8.10_linux_amd64.tar.gz
+        ARCH=$(uname -m)
+        case ${ARCH} in
+            x86_64)       INFLUX_ARCH="amd64" ;;
+            aarch64|arm64) INFLUX_ARCH="arm64" ;;
+            armv7l|armhf)  INFLUX_ARCH="armhf" ;;
+            *)             echo "Architecture ${ARCH} non supportée"; return 1 ;;
+        esac
+        archive="influxdb-1.8.10_linux_${INFLUX_ARCH}.tar.gz"
+        # 2. Téléchargement dynamique
+        echo "Installation locale de InfluxDB pour ${archive}..."
+        wget -q "https://dl.influxdata.com/influxdb/releases/${archive}"
         
         # Extract only the 'influx' binary from the tarball
-        tar xvfz influxdb-1.8.10_linux_amd64.tar.gz > /dev/null
+        tar xvfz ${archive} > /dev/null
         mv influxdb-1.8.10-1/usr/bin/influx . 
 
-        rm influxdb-1.8.10_linux_amd64.tar.gz
+        rm ${archive}
         rm -rf influxdb-1.8.10-1
     )
 fi
