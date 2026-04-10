@@ -1,0 +1,30 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "haos",
+    "influxdb",
+    "homeassistant",
+    "hass",
+    "shellcheck",
+    "shfmt",
+    "markdownlint",
+    "codespell",
+    "getsensors",
+    "getsensor",
+    "getclimats",
+    "CREDS",
+    "pression",
+    "tdeg",
+    "xvfz",
+    "armhf",
+    "armv",
+    "startswith",
+    "hpa"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    ".git",
+    "bin"
+  ]
+}

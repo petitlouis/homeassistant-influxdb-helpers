@@ -15,7 +15,7 @@ if ! command -v "$cmd" >/dev/null 2>&1 && [ ! -f "$LOCAL_BIN_DIR/$cmd" ]; then
 		aarch64 | arm64) INFLUX_ARCH="arm64" ;;
 		armv7l | armhf) INFLUX_ARCH="armhf" ;;
 		*)
-			echo "Architecture ${ARCH} non supportée"
+			echo "ERROR: Unsupported architecture: ${ARCH}"
 			return 1
 			;;
 		esac
@@ -48,7 +48,7 @@ check_influxdb_connection() {
 		echo "   Check your credentials and VPN/Network status."
 		return 1
 	else
-		echo "✅ Connexion InfluxDB"
+		echo "✅ Connection InfluxDB"
 	fi
 }
 
@@ -62,7 +62,7 @@ ha_influx() {
 		"$@"
 }
 
-# check influxDb connexion
+# check influxDb connection
 check_influxdb_connection
 
 # ha_influx -execute "SELECT * INTO hPa FROM hPa WHERE entity_id = 'tdeg_ext_pression_pressure' GROUP BY *"
@@ -87,20 +87,17 @@ migration() {
 	rm migration.csv migration.txt
 }
 
-# ha_drop_entity '%' 'tempsalon_humidity'
 ha_drop_entity() {
 	local MEASURE="$1"
 	local ENTITY="$2"
 
-	# 1. Vérification des arguments
 	if [[ -z "$MEASURE" || -z "$ENTITY" ]]; then
-		echo "Usage: ha_drop <measure> <entity_id>"
-		echo "Exemple: ha_drop hPa tdeg_ext_pression_pressure"
+		echo "Usage: ha_drop <measurement unit> <entity_id>"
 		return 1
 	fi
 
-	# 2. Vérification de l'existence (Comptage de points)
-	# On extrait juste le chiffre du CSV pour savoir s'il y a quelque chose à supprimer
+	# Existence check (Point counting)
+	# Parsing the CSV point count to verify if records exist for deletion
 	local count
 	count=$(ha_influx -execute "SELECT count(value) FROM \"${MEASURE}\" WHERE \"entity_id\" = '${ENTITY}'" -format csv | tail -n 1 | cut -d',' -f3)
 
@@ -109,76 +106,72 @@ ha_drop_entity() {
 		return 1
 	fi
 
-	# 3. Confirmation interactive
 	echo "ATTENTION : You're going to delete $count data points."
 	read -rp "Confirm deletion of '${ENTITY}'  ? (y/N) : " confirm
 
 	if [[ "$confirm" =~ ^[yY](es)?$ ]]; then
 		if ha_influx -execute "DROP SERIES FROM \"${MEASURE}\" WHERE \"entity_id\" = '${ENTITY}'"; then
-			echo "Succès : L'entité '${ENTITY}' a été rayée de la carte."
+			echo "Success: The entity '${ENTITY}' has been wiped off the map."
 		else
-			echo "Erreur : La base a refusé le DROP."
+			echo "Error : Database refused to drop."
 		fi
 	else
-		echo "Action annulée."
+		echo "Action canceled."
 	fi
 }
 
 ha_migration() {
-	# Récupération des paramètres
 	local SRC="$1"
 	local DEST="$2"
 
-	# Vérification que les deux paramètres sont présents
 	if [ -z "$SRC" ] || [ -z "$DEST" ]; then
-		echo "ERREUR : Il manque des paramètres."
+		echo "Error : parameters are missing."
 		echo "Usage : migration <entity_id_source> <entity_id_destination>"
 		return 1
 	fi
 
-	echo "--- Début de la migration ---"
+	echo "--- Begin of the migration ---"
 	echo "Source      : $SRC"
 	echo "Destination : $DEST"
 
-	# 1. Exportation avec vérification de succès
 	echo "1/4 Exportation..."
 	if ! ha_influx -execute "SELECT value FROM \"hPa\" WHERE \"entity_id\" = '${SRC}'" -format csv >migration.csv; then
-		echo "ERREUR : L'exportation a échoué (problème de connexion ?)"
+		echo "ERROR: Export failed (connection issue?)"
 		return 1
 	fi
 
-	# Vérification que le fichier n'est pas vide (capteur inexistant ou sans données)
+	# Verifying that the file is not empty (handles missing sensors or empty datasets)
 	if [ ! -s migration.csv ] || [ "$(wc -l <migration.csv)" -le 1 ]; then
-		echo "ERREUR : Aucune donnée trouvée pour '${SRC}'. Vérifie l'orthographe."
+		echo "ERROR: No data found for '${SRC}'. Please check the spelling."
 		rm -f migration.csv
 		return 1
 	fi
 
-	# 2. Préparation du fichier d'import (Line Protocol)
-	echo "2/4 Préparation des données..."
+	# 2. Preparation import file (Line Protocol)
+	echo "2/4 Data preparation..."
 	{
 		echo "# DML"
 		echo "# CONTEXT-DATABASE: ${INFLUXDB_DB}"
-		# On injecte dynamiquement la variable DEST dans awk
+		# Dynamically inject the DEST variable into awk
 		tail -n +2 migration.csv | awk -F, -v d="${DEST}" '{print "hPa,entity_id=" d " value=" $3 " " $2}'
 	} >migration.txt
 
-	# 3. Importation avec arrêt si échec
-	echo "3/4 Importation dans InfluxDB..."
+	# 3. Import with fail-safe stop
+	echo "3/4 Importing into InfluxDB..."
 	if ! ha_influx -import -path=migration.txt -database="${INFLUXDB_DB}"; then
-		echo "ERREUR : L'importation a échoué. On ne supprime rien."
+		echo "ERROR: Import failed. Aborting deletion to prevent data loss."
 		rm -f migration.csv migration.txt
 		return 1
 	fi
 
-	# 4. Suppression uniquement si tout le reste a fonctionné
-	echo "4/4 Nettoyage de l'ancienne série..."
+	# 4. Deletion only if everything else succeeded
+	echo "4/4 Cleaning up old series..."
 	if ha_influx -execute "DROP SERIES FROM \"hPa\" WHERE \"entity_id\" = '${SRC}'"; then
-		echo "SUCCÈS : Migration terminée de $SRC vers $DEST."
+		echo "SUCCESS: Migration completed from $SRC to $DEST."
 	else
-		echo "ATTENTION : Données copiées, mais l'ancienne série n'a pas pu être supprimée."
+		echo "WARNING: Data copied, but the old series could not be deleted."
 	fi
 
-	# Nettoyage final des fichiers temporaires
+	# Final cleanup of temporary files
 	rm -f migration.csv migration.txt
 }

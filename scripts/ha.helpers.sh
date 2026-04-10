@@ -21,9 +21,9 @@ check_ha_connection() {
 	local response
 	response=$(ha_api "/")
 	if [[ "$response" == *"API running"* ]]; then
-		echo "✅ Home Assistant connexion: commands ha_getclimats, ha_getsensors, ha_getsensor."
+		echo "✅ Home Assistant connection: commands ha_getclimats, ha_getsensors, ha_getsensor."
 	else
-		echo "❌ Error Home Assistant connexion: Check HA_TOKEN ou HA_HOST in credentials.sh"
+		echo "❌ Error Home Assistant connection: Check HA_TOKEN ou HA_HOST in credentials.sh"
 		return 1
 	fi
 }

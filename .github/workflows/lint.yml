@@ -14,12 +14,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # - name: Check Spelling
-      #   uses: codespell-project/actions-codespell@v2
-      #   with:
-      #     skip: .git,./bin
-      #     path: .
-      #     ignore_words_list: haos,influxdb
+      - name: Check Spelling (Strict English)
+        uses: streetsidesoftware/cspell-action@v6
+        with:
+          config: 'cspell.json'
+          files: '**/*.{sh,md,yml}'
 
       - name: Lint Markdown
         uses: DavidAnson/markdownlint-cli2-action@v16
