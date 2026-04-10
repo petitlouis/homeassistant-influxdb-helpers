@@ -1,0 +1,30 @@
+name: Release Documentation PDF
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  generate-pdf:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Create Artifact Directory
+        run: mkdir -p target
+
+      - name: Generate PDF from README
+        run: npx -y md-to-pdf README.md
+
+      - name: Move PDF to target
+        run: mv README.pdf target/documentation.pdf
+
+      - name: Upload PDF to Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/documentation.pdf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -7,4 +7,5 @@ bin/
 ha.influxdb.credentials.sh
 .DS_Store
 .vscode/
+target/*
 EOF
