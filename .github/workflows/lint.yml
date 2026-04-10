@@ -1,0 +1,37 @@
+name: CI Quality Control
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  linting:
+    name: quality-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # - name: Check Spelling
+      #   uses: codespell-project/actions-codespell@v2
+      #   with:
+      #     skip: .git,./bin
+      #     path: .
+      #     ignore_words_list: haos,influxdb
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: 'README.md'
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './scripts'
+          additional_files: 'load.ha.influxdb.sh'
+
+      - name: Check Shell Formatting (shfmt)
+        uses: mfinelli/setup-shfmt@v3
+      - run: shfmt -d .
