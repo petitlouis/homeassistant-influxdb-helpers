@@ -1,5 +1,7 @@
 # 🛠️ HA & InfluxDB Toolbox
 
+[![CI Quality Control](https://github.com/petitlouis/homeassistant-influxdb-helpers/actions/workflows/lint.yml/badge.svg)](https://github.com/petitlouis/homeassistant-influxdb-helpers/actions/workflows/lint.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **Lightweight Bash helpers to manage and monitor Home Assistant data with InfluxDB 1.8.**
 
 This toolbox optimizes Home Assistant storage by delegating long-term history to InfluxDB, simplifies YAML configuration, and automates data maintenance (migration/deletion).
@@ -100,5 +102,3 @@ Use these commands to identify which sensors to include in your `influxdb.yaml`:
 ## ⚖️ License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
-
-![Linting Status](https://github.com/petitlouis/homeassistant-influxdb-helpers/actions/workflows/lint.yml/badge.svg)
