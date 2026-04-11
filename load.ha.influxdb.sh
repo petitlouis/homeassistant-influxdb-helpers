@@ -3,8 +3,15 @@
 # Path Configuration
 # This function detects the absolute path of the script, whether it is executed or sourced.
 get_script_dir() {
-	# shellcheck disable=SC2296 # Incompatibility between Bash and Zsh for sourcing
+	# shellcheck disable=SC2296 # Hybrid detection for Bash/Zsh sourcing
 	local SOURCE="${BASH_SOURCE[0]}"
+
+	# If BASH_SOURCE is empty, we are likely in Zsh
+	if [ -z "$SOURCE" ]; then
+		# We use eval to hide Zsh-specific syntax from the bash-centric linter (shfmt)
+		SOURCE=$(eval 'echo "${(%):-%x}"' 2>/dev/null)
+	fi
+
 	while [ -h "$SOURCE" ]; do
 		local DIR
 		DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
