@@ -78,6 +78,29 @@ if [ -f "${REPO_PATH}/load.ha.influxdb.sh" ]; then
 fi
 ```
 
+> [!IMPORTANT]
+> **Specific to Home Assistant OS**: The Terminal & SSH add-on uses an ephemeral filesystem. Every time the add-on restarts or HA OS updates, the `~/.zshrc` file is reset to its default state, causing the ha_ helpers to disappear.
+
+To make the auto-load permanent on HA OS, you must use the init_commands feature instead of manually editing the shell profile:
+
+1. Navigate to **Settings** > **Applications** > **Terminal & SSH**.
+
+2. Go to the **Configuration** tab.
+
+3. Add the following block to the init_commands section (this ensures the loader is re-injected into `.zshrc` at every boot):
+
+```yaml
+init_commands:
+  - >-
+    if ! grep -q "REPO_PATH" ~/.zshrc; then
+      echo 'REPO_PATH="/share/homeassistant-influxdb-helpers"' >> ~/.zshrc
+      echo 'CREDS_PATH="/config/ha.influxdb.credentials.sh"' >> ~/.zshrc
+      echo 'if [ -f "${REPO_PATH}/load.ha.influxdb.sh" ]; then' >> ~/.zshrc
+      echo '    . "${REPO_PATH}/load.ha.influxdb.sh" "${CREDS_PATH}"' >> ~/.zshrc
+      echo 'fi' >> ~/.zshrc
+    fi
+```
+
 ---
 
 ## 📖 Usage Guide
