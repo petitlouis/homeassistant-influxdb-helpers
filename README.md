@@ -17,77 +17,56 @@ This toolbox optimizes Home Assistant storage by delegating long-term history to
 
 ## 🚀 Installation & Setup
 
-### Prerequisites
+### 1. Prerequisites
 
 The script automatically checks for the following dependencies:
-
-* `curl`: For REST API calls.
-* `jq`: A JSON processor for data filtering.
+* `curl` & `jq`
 * `influx` (v1.8): **Automatically installed locally** in `./bin` if not found on your system.
 
-### Credentials configuration
+### 2. Credentials Configuration
 
 Duplicate the credential template outside the repository folder for security:
 
 ```bash
-cp templates/credentials.sh.example ~/sandbox/ha.influxdb.credentials.sh
-chmod 600 ~/sandbox/ha.influxdb.credentials.sh
+cp templates/credentials.sh.example ~/ha.influxdb.credentials.sh
+chmod 600 ~/ha.influxdb.credentials.sh
 ```
 
-Fill in your access details (`HA_TOKEN`, `INFLUX_USER`, etc.).
+> [!TIP]
+> Home Assistant OS Users: Store this file in /config/ha.influxdb.credentials.sh so it is included in your official HA backups.
 
-### Automatic loading
+### 3. Shell Integration & Persistence
 
-Add the following block to your `~/.bashrc` to have the helpers available in every new terminal session:
+To use the ha_ helpers, the loader must be sourced in your shell profile. Choose the method that matches your environment:
+
+#### Standard Linux (Bash/Zsh)
+
+Add this block to your ~/.bashrc or ~/.zshrc:
 
 ```bash
-# Home Assistant & InfluxDB helpers
-LOAD_HELPERS="${HOME}/sandbox/homeassistant-influxdb-helpers/load.ha.influxdb.sh"
-if [ -f "${LOAD_HELPERS}" ]; then
-    . "${LOAD_HELPERS}" "${HOME}/sandbox/ha.influxdb.credentials.sh"
-fi
-```
-
-### 🏠 Installation on Home Assistant OS
-
-If you want to use these helpers directly within your Home Assistant terminal (via the **Advanced SSH & Web Terminal** add-on), follow these steps:
-
-#### Clone the repository
-
-We recommend cloning the repo into the `/share` folder to ensure it persists across add-on restarts:
-
-```bash
-cd /share
-git clone https://github.com/petitlouis/homeassistant-influxdb-helpers
-```
-
-#### Create your credentials file
-
-Follow [Credentials Configuration](#credentials-configuration) and store your HomeAssistant and InfluxDB credentials `ha.influxdb.credentials.sh` in the `/config` folder (which is included in your HA backups)
-
-#### Auto-load on terminal start
-
-To have the commands available every time you open the terminal, add the loader to your shell profile (`.zshrc` for Advanced SSH or .bashrc for the standard add-on):
-
-```shell
-REPO_PATH="/share/homeassistant-influxdb-helpers"
-CREDS_PATH="/config/ha.influxdb.credentials.sh"
+# Load HA & InfluxDB helpers
+REPO_PATH="${HOME}/homeassistant-influxdb-helpers"
+CREDS_PATH="${HOME}/ha.influxdb.credentials.sh"
 
 if [ -f "${REPO_PATH}/load.ha.influxdb.sh" ]; then
     . "${REPO_PATH}/load.ha.influxdb.sh" "${CREDS_PATH}"
 fi
 ```
 
-> [!IMPORTANT]
-> **Specific to Home Assistant OS**: The Terminal & SSH add-on uses an ephemeral filesystem. Every time the add-on restarts or HA OS updates, the `~/.zshrc` file is reset to its default state, causing the ha_ helpers to disappear.
+#### Home Assistant OS (Persistent)
 
-To make the auto-load permanent on HA OS, you must use the init_commands feature instead of manually editing the shell profile:
+On HA OS, the filesystem is ephemeral. To ensure the helpers survive add-on restarts and system updates, use the init_commands feature of the Advanced SSH & Web Terminal.
 
-1. Navigate to **Settings** > **Applications** > **Terminal & SSH**.
+1. Clone the repo in a persistent folder:
 
-2. Go to the **Configuration** tab.
+```bash
+cd /share
+git clone [https://github.com/petitlouis/homeassistant-influxdb-helpers](https://github.com/petitlouis/homeassistant-influxdb-helpers)
+```
 
-3. Add the following block to the init_commands section (this ensures the loader is re-injected into `.zshrc` at every boot):
+2. Navigate to **Settings** > **Add-ons / Apps** > **Terminal & SSH** > **Configuration**.
+
+3. Add the following to the `init_commands` section:
 
 ```yaml
 init_commands:
@@ -101,27 +80,26 @@ init_commands:
     fi
 ```
 
----
+## Usage Guide
 
-## 📖 Usage Guide
+### Home Assistant Inspection
 
-### 🔍 Home Assistant Inspection
+Use these commands to identify sensors for your influxdb.yaml:
 
-Use these commands to identify which sensors to include in your `influxdb.yaml`:
+* List all sensors: ha_getsensors
 
-* **List all sensors**: `ha_getsensors`
-* **Filter by type (e.g., batteries)**: `ha_getsensors battery$` (grep syntax)
-* **Inspect a sensor's JSON state**: `ha_getsensor my_temperature_sensor`, `ha_getsensor binary_sensor.magnetic_contact_battery_low`
+* Filter by type (e.g., batteries): ha_getsensors battery$
 
-### 🧹 InfluxDB Maintenance
+* Inspect a sensor's state: ha_getsensor sensor.my_temperature
 
-* **Data Migration**: If you rename an entity, move your history to the new ID without losing data.
-  * `ha_migration <old_id> <new_id>`
-* **Clean Deletion**: Safely delete an obsolete series after a confirmation prompt.
-  * `ha_drop_entity <measurement> <entity_id>`
+### InfluxDB Maintenance
 
----
+* Data Migration: Move history when an entity is renamed.
+  * ha_migration <old_id> <new_id>
 
-## ⚖️ License
+* Clean Deletion: Safely delete an obsolete series.
+  * ha_drop_entity <measurement> <entity_id>
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+## ⚖️ License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
